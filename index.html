@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinWise - SIP & Daily Expense Toolkit</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        emeraldCustom: '#10b981',
+                        roseCustom: '#f43f5e',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .light .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300 overflow-x-hidden dark:bg-slate-950 dark:text-slate-100 light:bg-slate-100 light:text-slate-800" id="appBody">
+
+    <!-- HEADER NAVBAR -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-800/80 light:border-slate-200 bg-slate-950/80 light:bg-white/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-500 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">FinWise</span>
+                    <span class="text-xs text-slate-400 block -mt-1 font-medium">SIP & Expense Toolkit</span>
+                </div>
+            </div>
+
+            <!-- Actions & Navigation -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button id="themeToggleBtn" class="p-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 light:hover:bg-slate-200 transition-all text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-sun text-amber-400 dark:inline hidden"></i>
+                    <i class="fa-solid fa-moon text-indigo-600 dark:hidden inline"></i>
+                    <span class="text-xs font-semibold hidden sm:inline">Theme</span>
+                </button>
+
+                <div class="hidden md:flex items-center space-x-3 text-xs font-medium text-slate-400">
+                    <button onclick="openModal('aboutModal')" class="hover:text-indigo-400 transition">About</button>
+                    <button onclick="openModal('privacyModal')" class="hover:text-indigo-400 transition">Privacy</button>
+                    <button onclick="openModal('termsModal')" class="hover:text-indigo-400 transition">Terms</button>
+                    <button onclick="openModal('contactModal')" class="hover:text-indigo-400 transition">Contact</button>
+                </div>
+
+                <button onclick="triggerExportFlow()" class="bg-gradient-to-r from-emeraldCustom to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold px-3.5 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Export Report</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================================================================= -->
+    <!-- 1. ADSTERRA HEADER BANNER (320x50)                                -->
+    <!-- ================================================================= -->
+    <section class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-3">
+        <div class="w-full glass-card rounded-2xl p-2.5 border border-indigo-500/20 shadow-lg text-center flex flex-col items-center justify-center min-h-[75px] relative overflow-hidden bg-slate-900/50">
+            <div class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Advertisement</div>
+            
+            <div id="adsterra-header-slot" class="w-full flex justify-center items-center">
+                <script>
+                  atOptions = {
+                    'key' : '2d64ab87de77d08d8a4b7e73d658f5de',
+                    'format' : 'iframe',
+                    'height' : 50,
+                    'width' : 320,
+                    'params' : {}
+                  };
+                </script>
+                <script src="https://www.highrevenueformat.com/2d64ab87de77d08d8a4b7e73d658f5de/invoke.js"></script>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: SIP CALCULATOR -->
+        <section class="lg:col-span-6 flex flex-col gap-6">
+            <div class="glass-card rounded-2xl p-6 shadow-xl border border-slate-800/80 light:border-slate-200">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <i class="fa-solid fa-piggy-bank text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-100 light:text-slate-800">SIP Investment Calculator</h2>
+                            <p class="text-xs text-slate-400">Project your future wealth through compounding</p>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        Compounded
+                    </span>
+                </div>
+
+                <!-- SIP INPUT FORMS -->
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-semibold text-slate-300 light:text-slate-600">Monthly Investment</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                                <input type="number" id="sipAmountInput" value="10000" min="500" max="1000000" step="500" class="w-32 bg-slate-900 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-lg py-1.5 pl-7 pr-3 text-right text-xs font-bold text-indigo-400 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <input type="range" id="sipAmountRange" min="500" max="200000" value="10000" step="500" class="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>₹500</span>
+                            <span>₹1,00,000</span>
+                            <span>₹2,00,000</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-semibold text-slate-300 light:text-slate-600">Expected Annual Return Rate (%)</label>
+                            <div class="relative">
+                                <input type="number" id="sipRateInput" value="12" min="1" max="30" step="0.5" class="w-28 bg-slate-900 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-lg py-1.5 pl-3 pr-7 text-right text-xs font-bold text-indigo-400 focus:outline-none focus:border-indigo-500">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="sipRateRange" min="1" max="30" value="12" step="0.5" class="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>1%</span>
+                            <span>15%</span>
+                            <span>30%</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-semibold text-slate-300 light:text-slate-600">Investment Duration (Years)</label>
+                            <div class="relative">
+                                <input type="number" id="sipYearsInput" value="10" min="1" max="40" step="1" class="w-28 bg-slate-900 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-lg py-1.5 pl-3 pr-8 text-right text-xs font-bold text-indigo-400 focus:outline-none focus:border-indigo-500">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Yr</span>
+                            </div>
+                        </div>
+                        <input type="range" id="sipYearsRange" min="1" max="40" value="10" step="1" class="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>1 Yr</span>
+                            <span>20 Yrs</span>
+                            <span>40 Yrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESULTS BREAKDOWN -->
+                <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="space-y-3">
+                        <div class="p-3 bg-slate-900/60 light:bg-slate-100/80 rounded-xl border border-slate-800 light:border-slate-200">
+                            <p class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Invested Amount</p>
+                            <p class="text-base font-bold text-slate-200 light:text-slate-700" id="resInvested">₹12,00,000</p>
+                        </div>
+                        <div class="p-3 bg-slate-900/60 light:bg-slate-100/80 rounded-xl border border-slate-800 light:border-slate-200">
+                            <p class="text-[11px] text-emerald-400 uppercase tracking-wider font-semibold">Est. Wealth Returns</p>
+                            <p class="text-base font-bold text-emerald-400" id="resReturns">₹11,23,391</p>
+                        </div>
+                        <div class="p-3 bg-indigo-950/40 light:bg-indigo-50/80 rounded-xl border border-indigo-500/30">
+                            <p class="text-[11px] text-indigo-300 light:text-indigo-600 uppercase tracking-wider font-semibold">Total Future Value</p>
+                            <p class="text-xl font-extrabold text-indigo-400" id="resTotal">₹23,23,391</p>
+                        </div>
+                    </div>
+
+                    <!-- Donut Chart Canvas -->
+                    <div class="flex flex-col items-center justify-center p-2">
+                        <div class="relative w-40 h-40">
+                            <canvas id="sipChart" width="160" height="160" class="w-full h-full"></canvas>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-3 text-[11px]">
+                            <span class="flex items-center gap-1.5 text-slate-400">
+                                <span class="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block"></span> Invested
+                            </span>
+                            <span class="flex items-center gap-1.5 text-emerald-400">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Returns
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 2. ADSTERRA MIDDLE NATIVE BANNER                                  -->
+        <!-- ================================================================= -->
+        <div class="lg:col-span-12 my-1">
+            <div class="w-full glass-card rounded-2xl p-3 border border-indigo-500/20 text-center flex flex-col items-center justify-center relative overflow-hidden bg-slate-900/40 min-h-[120px]">
+                <div class="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">Sponsored Content</div>
+                
+                <div id="adsterra-infeed-slot" class="w-full flex justify-center items-center">
+                    <script async="async" data-cfasync="false" src="https://pl31539143.profitableratecpmnetwork.com/55746ba7485caf30b218505cb537bed7/invoke.js"></script>
+                    <div id="container-55746ba7485caf30b218505cb537bed7"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: DAILY EXPENSE TRACKER -->
+        <section class="lg:col-span-6 flex flex-col gap-6">
+            <div class="glass-card rounded-2xl p-6 shadow-xl border border-slate-800/80 light:border-slate-200 flex flex-col justify-between h-full">
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <i class="fa-solid fa-wallet text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-100 light:text-slate-800">Daily Expense Tracker</h2>
+                                <p class="text-xs text-slate-400">Monitor daily income, savings & spending</p>
+                            </div>
+                        </div>
+                        <button onclick="clearAllTransactions()" class="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition">
+                            <i class="fa-solid fa-trash-can"></i> Clear All
+                        </button>
+                    </div>
+
+                    <!-- SUMMARY CARDS -->
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="p-3 bg-slate-900/60 light:bg-slate-100/80 rounded-xl border border-slate-800 light:border-slate-200 text-center">
+                            <p class="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">Income</p>
+                            <p class="text-sm sm:text-base font-bold text-emerald-400 mt-1" id="totalIncome">₹0</p>
+                        </div>
+                        <div class="p-3 bg-slate-900/60 light:bg-slate-100/80 rounded-xl border border-slate-800 light:border-slate-200 text-center">
+                            <p class="text-[10px] text-rose-400 uppercase tracking-wider font-semibold">Expenses</p>
+                            <p class="text-sm sm:text-base font-bold text-rose-400 mt-1" id="totalExpense">₹0</p>
+                        </div>
+                        <div class="p-3 bg-slate-900/60 light:bg-slate-100/80 rounded-xl border border-slate-800 light:border-slate-200 text-center">
+                            <p class="text-[10px] text-indigo-400 uppercase tracking-wider font-semibold">Net Balance</p>
+                            <p class="text-sm sm:text-base font-bold text-indigo-400 mt-1" id="netBalance">₹0</p>
+                        </div>
+                    </div>
+
+                    <!-- TRANSACTION FORM -->
+                    <form id="transactionForm" onsubmit="addTransaction(event)" class="space-y-3 bg-slate-900/40 light:bg-slate-100/50 p-4 rounded-xl border border-slate-800 light:border-slate-200 mb-6">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">Type</label>
+                                <select id="txType" class="w-full bg-slate-900 light:bg-white border border-slate-700 light:border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-200 light:text-slate-700 focus:outline-none focus:border-indigo-500">
+                                    <option value="income">Income (+)</option>
+                                    <option value="expense" selected>Expense (-)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">Category</label>
+                                <select id="txCategory" class="w-full bg-slate-900 light:bg-white border border-slate-700 light:border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-200 light:text-slate-700 focus:outline-none focus:border-indigo-500">
+                                    <option value="Salary">Salary</option>
+                                    <option value="Investments">Investments</option>
+                                    <option value="Food & Dining">Food & Dining</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Bills & Utilities">Bills & Utilities</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Others" selected>Others</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">Amount (₹)</label>
+                                <input type="number" id="txAmount" required min="1" placeholder="e.g. 1500" class="w-full bg-slate-900 light:bg-white border border-slate-700 light:border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-200 light:text-slate-700 focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">Date</label>
+                                <input type="date" id="txDate" required class="w-full bg-slate-900 light:bg-white border border-slate-700 light:border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-200 light:text-slate-700 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-400 mb-1 block">Note / Description</label>
+                            <input type="text" id="txNote" placeholder="e.g. Grocery shopping" class="w-full bg-slate-900 light:bg-white border border-slate-700 light:border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-200 light:text-slate-700 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30">
+                            <i class="fa-solid fa-plus"></i> Add Transaction Entry
+                        </button>
+                    </form>
+
+                    <!-- TRANSACTION HISTORY LIST -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+                            <span>Recent History Log</span>
+                            <span id="txCountBadge" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded-full text-slate-300">0 items</span>
+                        </div>
+                        <div id="transactionList" class="max-h-56 overflow-y-auto space-y-2 pr-1">
+                            <!-- Dynamic Items -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- DOWNLOAD / EXPORT MODAL -->
+    <div id="downloadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-indigo-500/30 shadow-2xl relative transform transition-all text-center">
+            
+            <button onclick="closeModal('downloadModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white transition text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-14 h-14 bg-gradient-to-tr from-brand-600 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-500/30 mb-4 animate-pulse-glow">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <h3 class="text-xl font-extrabold text-slate-100">Preparing Your Financial Report</h3>
+            <p class="text-xs text-slate-400 mt-1">Please wait for verification to unlock your downloadable SIP & Expense Report (.CSV).</p>
+
+            <div class="my-6 flex flex-col items-center justify-center">
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path id="timerCircleProgress" class="text-indigo-500 stroke-current transition-all duration-1000" stroke-width="3" stroke-dasharray="100, 100" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    </svg>
+                    <span id="countdownDisplay" class="absolute text-2xl font-black text-indigo-400 font-mono">15s</span>
+                </div>
+                <p id="timerStatusText" class="text-[11px] text-amber-400 font-medium mt-2">Generating secure client-side blob payload...</p>
+            </div>
+
+            <!-- Adsterra Sponsor Direct Link Button -->
+            <div class="space-y-3">
+                <a id="adsterraSponsorBtn" href="https://www.profitableratecpmnetwork.com/iv1dz53b?key=cac8498fe8a74b86948b7c826874b917" target="_blank" onclick="onSponsorClick()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02]">
+                    <i class="fa-solid fa-bolt text-sm"></i>
+                    <span>Sponsor Link / Instant Unlock (Direct Link)</span>
+                </a>
+
+                <button id="finalDownloadBtn" disabled onclick="executeFileDownload()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-800 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-700 transition-all">
+                    <i class="fa-solid fa-download"></i>
+                    <span id="downloadBtnText">Locked (Wait 15s)</span>
+                </button>
+            </div>
+
+            <p class="text-[10px] text-slate-500 mt-4">
+                Clicking the sponsor link supports our free service and bypasses the countdown timer immediately.
+            </p>
+        </div>
+    </div>
+
+    <!-- MODALS FOR POLICIES -->
+    <!-- About Modal -->
+    <div id="aboutModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button onclick="closeModal('aboutModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-indigo-400 mb-3"><i class="fa-solid fa-circle-info mr-2"></i>About FinWise Toolkit</h3>
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <p>FinWise is a lightweight, privacy-focused financial utility designed to help individuals calculate systematic investment returns (SIP) and maintain transparent daily expense tracking.</p>
+                <p>All calculations and expense data are processed 100% locally in your browser context.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button onclick="closeModal('privacyModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-indigo-400 mb-3"><i class="fa-solid fa-user-shield mr-2"></i>Privacy Policy</h3>
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <p><strong>1. Data Collection:</strong> We do not collect, harvest, or transmit any user transaction records or financial figures. Data remains strictly stored within your browser's LocalStorage.</p>
+                <p><strong>2. Third-Party Advertising:</strong> This application utilizes third-party ad networks (such as Adsterra) to serve ads and sponsored links.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div id="termsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button onclick="closeModal('termsModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-indigo-400 mb-3"><i class="fa-solid fa-file-contract mr-2"></i>Terms of Service & Disclaimer</h3>
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <p><strong>Financial Disclaimer:</strong> Calculations performed by this tool are estimates for illustrative purposes only. Consult a certified financial advisor before making real-world investments.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 shadow-2xl relative">
+            <button onclick="closeModal('contactModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-bold text-indigo-400 mb-3"><i class="fa-solid fa-envelope mr-2"></i>Contact Support</h3>
+            <form onsubmit="handleContactSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 block mb-1">Your Name</label>
+                    <input type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 block mb-1">Email Address</label>
+                    <input type="email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 block mb-1">Message</label>
+                    <textarea rows="3" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs transition">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER WITH VISIBLE ADSTERRA SOCIAL BAR SLOT -->
+    <footer class="w-full border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-white py-6 text-center text-xs text-slate-500 mb-12">
+        <div class="max-w-7xl mx-auto px-4 space-y-4">
+            
+            <!-- Adsterra Social Bar / Bottom Script Slot -->
+            <div id="bottom-ad-container" class="w-full py-2.5 flex flex-col justify-center items-center min-h-[60px] bg-slate-900/80 rounded-xl border border-slate-800 max-w-lg mx-auto relative shadow-inner">
+                <span class="absolute top-1 right-2 text-[8px] text-slate-500 uppercase tracking-widest font-bold">Social Bar Slot</span>
+                <!-- ADSTERRA SOCIAL BAR SCRIPT -->
+                <script src="https://pl31539155.profitableratecpmnetwork.com/5a/71/23/5a7123ffb8257c55f6710c10884def55.js"></script>
+            </div>
+
+            <p>© 2026 FinWise Toolkit. All rights reserved.</p>
+            <div class="flex justify-center space-x-4 text-slate-400 font-medium text-[11px]">
+                <button onclick="openModal('aboutModal')" class="hover:text-indigo-400">About Us</button>
+                <span>•</span>
+                <button onclick="openModal('privacyModal')" class="hover:text-indigo-400">Privacy Policy</button>
+                <span>•</span>
+                <button onclick="openModal('termsModal')" class="hover:text-indigo-400">Terms & DMCA</button>
+                <span>•</span>
+                <button onclick="openModal('contactModal')" class="hover:text-indigo-400">Contact</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT APP CORE ==================== -->
+    <script>
+        const ADSTERRA_DIRECT_LINK = "https://www.profitableratecpmnetwork.com/iv1dz53b?key=cac8498fe8a74b86948b7c826874b917";
+
+        let transactions = JSON.parse(localStorage.getItem('finwise_transactions') || '[]');
+        let timerInterval = null;
+        let countdownSeconds = 15;
+        let isUnlocked = false;
+
+        window.onload = function() {
+            document.getElementById('txDate').valueAsDate = new Date();
+            
+            const sponsorBtn = document.getElementById('adsterraSponsorBtn');
+            if (sponsorBtn) sponsorBtn.href = ADSTERRA_DIRECT_LINK;
+
+            setupSipListeners();
+            calculateSIP();
+            renderTransactions();
+
+            if (localStorage.getItem('theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+        };
+
+        // Theme Switcher
+        document.getElementById('themeToggleBtn').addEventListener('click', function() {
+            const doc = document.documentElement;
+            if (doc.classList.contains('dark')) {
+                doc.classList.remove('dark');
+                doc.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                doc.classList.remove('light');
+                doc.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        /* SIP CALCULATOR LOGIC */
+        function setupSipListeners() {
+            const amountInput = document.getElementById('sipAmountInput');
+            const amountRange = document.getElementById('sipAmountRange');
+            const rateInput = document.getElementById('sipRateInput');
+            const rateRange = document.getElementById('sipRateRange');
+            const yearsInput = document.getElementById('sipYearsInput');
+            const yearsRange = document.getElementById('sipYearsRange');
+
+            amountInput.addEventListener('input', (e) => { amountRange.value = e.target.value; calculateSIP(); });
+            amountRange.addEventListener('input', (e) => { amountInput.value = e.target.value; calculateSIP(); });
+
+            rateInput.addEventListener('input', (e) => { rateRange.value = e.target.value; calculateSIP(); });
+            rateRange.addEventListener('input', (e) => { rateInput.value = e.target.value; calculateSIP(); });
+
+            yearsInput.addEventListener('input', (e) => { yearsRange.value = e.target.value; calculateSIP(); });
+            yearsRange.addEventListener('input', (e) => { yearsInput.value = e.target.value; calculateSIP(); });
+        }
+
+        function calculateSIP() {
+            const P = parseFloat(document.getElementById('sipAmountInput').value) || 0;
+            const annualRate = parseFloat(document.getElementById('sipRateInput').value) || 0;
+            const years = parseFloat(document.getElementById('sipYearsInput').value) || 0;
+
+            const i = (annualRate / 12) / 100;
+            const n = years * 12;
+
+            let totalValue = 0;
+            if (i > 0) {
+                totalValue = P * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
+            } else {
+                totalValue = P * n;
+            }
+
+            const investedAmount = P * n;
+            const returnsGained = totalValue - investedAmount;
+
+            document.getElementById('resInvested').innerText = formatCurrency(investedAmount);
+            document.getElementById('resReturns').innerText = formatCurrency(returnsGained);
+            document.getElementById('resTotal').innerText = formatCurrency(totalValue);
+
+            drawDonutChart(investedAmount, returnsGained);
+        }
+
+        function drawDonutChart(invested, returns) {
+            const canvas = document.getElementById('sipChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const total = invested + returns;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (total <= 0) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 65;
+            const innerRadius = 45;
+
+            const investedAngle = (invested / total) * 2 * Math.PI;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, investedAngle);
+            ctx.arc(centerX, centerY, innerRadius, investedAngle, 0, true);
+            ctx.closePath();
+            ctx.fillStyle = '#64748b';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, investedAngle, 2 * Math.PI);
+            ctx.arc(centerX, centerY, innerRadius, 2 * Math.PI, investedAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = '#10b981';
+            ctx.fill();
+        }
+
+        function formatCurrency(val) {
+            return '₹' + Math.round(val).toLocaleString('en-IN');
+        }
+
+        /* EXPENSE TRACKER LOGIC */
+        function addTransaction(e) {
+            e.preventDefault();
+            const type = document.getElementById('txType').value;
+            const category = document.getElementById('txCategory').value;
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const date = document.getElementById('txDate').value;
+            const note = document.getElementById('txNote').value || category;
+
+            if (!amount || amount <= 0) return;
+
+            const tx = { id: Date.now(), type, category, amount, date, note };
+            transactions.unshift(tx);
+            saveTransactions();
+            renderTransactions();
+
+            document.getElementById('txAmount').value = '';
+            document.getElementById('txNote').value = '';
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveTransactions();
+            renderTransactions();
+        }
+
+        function clearAllTransactions() {
+            if (confirm('Are you sure you want to clear all transaction records?')) {
+                transactions = [];
+                saveTransactions();
+                renderTransactions();
+            }
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('finwise_transactions', JSON.stringify(transactions));
+        }
+
+        function renderTransactions() {
+            const listEl = document.getElementById('transactionList');
+            const countBadge = document.getElementById('txCountBadge');
+            listEl.innerHTML = '';
+
+            let totalInc = 0;
+            let totalExp = 0;
+
+            transactions.forEach(tx => {
+                if (tx.type === 'income') totalInc += tx.amount;
+                else totalExp += tx.amount;
+
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-xl border flex items-center justify-between text-xs transition ${
+                    tx.type === 'income' 
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-slate-200' 
+                        : 'bg-rose-500/10 border-rose-500/20 text-slate-200'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 rounded-lg ${tx.type === 'income' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                            <i class="fa-solid ${tx.type === 'income' ? 'fa-arrow-down-left' : 'fa-arrow-up-right'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-200 light:text-slate-800">${escapeHtml(tx.note)}</p>
+                            <p class="text-[10px] text-slate-400">${tx.category} • ${tx.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-extrabold ${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${tx.type === 'income' ? '+' : '-'}${formatCurrency(tx.amount)}
+                        </span>
+                        <button onclick="deleteTransaction(${tx.id})" class="text-slate-500 hover:text-rose-400 transition">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+
+            if (transactions.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-6 text-slate-500 text-xs">
+                        <i class="fa-solid fa-receipt text-2xl mb-2 text-slate-600 block"></i>
+                        No transactions recorded yet. Add an entry above!
+                    </div>
+                `;
+            }
+
+            document.getElementById('totalIncome').innerText = formatCurrency(totalInc);
+            document.getElementById('totalExpense').innerText = formatCurrency(totalExp);
+            document.getElementById('netBalance').innerText = formatCurrency(totalInc - totalExp);
+            countBadge.innerText = `${transactions.length} items`;
+        }
+
+        /* DOWNLOAD & COUNTDOWN FLOW */
+        function triggerExportFlow() {
+            openModal('downloadModal');
+            startCountdown();
+        }
+
+        function startCountdown() {
+            clearInterval(timerInterval);
+            countdownSeconds = 15;
+            isUnlocked = false;
+
+            const display = document.getElementById('countdownDisplay');
+            const status = document.getElementById('timerStatusText');
+            const downloadBtn = document.getElementById('finalDownloadBtn');
+            const downloadText = document.getElementById('downloadBtnText');
+            const circleProgress = document.getElementById('timerCircleProgress');
+
+            downloadBtn.disabled = true;
+            downloadBtn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-800 text-slate-500 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-700 transition-all";
+            downloadText.innerText = "Locked (Wait 15s)";
+            status.innerText = "Generating secure client-side report...";
+            status.className = "text-[11px] text-amber-400 font-medium mt-2";
+
+            timerInterval = setInterval(() => {
+                countdownSeconds--;
+                display.innerText = `${countdownSeconds}s`;
+
+                const dashOffset = (countdownSeconds / 15) * 100;
+                circleProgress.setAttribute('stroke-dasharray', `${dashOffset}, 100`);
+
+                if (countdownSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    unlockDownload();
+                }
+            }, 1000);
+        }
+
+        function unlockDownload() {
+            isUnlocked = true;
+            const display = document.getElementById('countdownDisplay');
+            const status = document.getElementById('timerStatusText');
+            const downloadBtn = document.getElementById('finalDownloadBtn');
+            const downloadText = document.getElementById('downloadBtnText');
+
+            display.innerText = "0s";
+            status.innerText = "Report verification complete! Download ready.";
+            status.className = "text-[11px] text-emerald-400 font-semibold mt-2";
+
+            downloadBtn.disabled = false;
+            downloadBtn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-emeraldCustom to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all hover:scale-[1.02]";
+            downloadText.innerText = "Save File to PC / Mobile (.CSV)";
+        }
+
+        function onSponsorClick() {
+            unlockDownload();
+        }
+
+        function executeFileDownload() {
+            if (!isUnlocked) return;
+
+            window.open(ADSTERRA_DIRECT_LINK, '_blank');
+
+            const sipInvested = document.getElementById('resInvested').innerText;
+            const sipReturns = document.getElementById('resReturns').innerText;
+            const sipTotal = document.getElementById('resTotal').innerText;
+
+            let csvContent = "FINWISE FINANCIAL REPORT SUMMARY\n";
+            csvContent += `Generated Date,${new Date().toLocaleString()}\n\n`;
+
+            csvContent += "SIP INVESTMENT PROJECTION\n";
+            csvContent += `Monthly SIP Amount,${document.getElementById('sipAmountInput').value}\n`;
+            csvContent += `Expected Return Rate (%),${document.getElementById('sipRateInput').value}%\n`;
+            csvContent += `Investment Duration,${document.getElementById('sipYearsInput').value} Years\n`;
+            csvContent += `Total Invested,${sipInvested.replace(/₹/g, '')}\n`;
+            csvContent += `Estimated Returns,${sipReturns.replace(/₹/g, '')}\n`;
+            csvContent += `Future Wealth Value,${sipTotal.replace(/₹/g, '')}\n\n`;
+
+            csvContent += "EXPENSE TRACKER LOG\n";
+            csvContent += "Date,Type,Category,Amount (INR),Note\n";
+
+            transactions.forEach(tx => {
+                csvContent += `"${tx.date}","${tx.type}","${tx.category}","${tx.amount}","${tx.note.replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `FinWise_Report_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+    closeModal('downloadModal');
+        }
+
+        /* MODAL UTILITIES */
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            if (id === 'downloadModal') {
+                clearInterval(timerInterval);
+            }
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert('Thank you for contacting us!');
+            closeModal('contactModal');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
